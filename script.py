@@ -20,6 +20,11 @@ yearly_average_images_dict = calculate_yearly_average_images(images_grouped_by_y
 # SVM
 # -------------------------
 
+# 2014
+#   monthly_images
+#   year_average_image
+#   year_average_image_pil
+
 yearly_average_images, yearly_average_images_pil = convert_yearly_average_images_dict_to_list(yearly_average_images_dict)
 
 pixel_data, labels = prepare_svm_data(yearly_average_images_pil)
@@ -70,3 +75,43 @@ plot_region_comparisons(first_middle_pixels_count, last_middle_pixels_count, "Mi
 
 # Comparar os pixels da região inferior
 plot_region_comparisons(first_bottom_pixels_count, last_bottom_pixels_count, "Bottom")
+
+
+
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+import numpy as np
+
+# Definições das classes e dados agrupados
+x = np.arange(10)  # Classes de intensidade (0 a 9)
+data_pairs = [
+    (first_top_pixels_count, last_top_pixels_count),
+    (first_middle_pixels_count, last_middle_pixels_count),
+    (first_bottom_pixels_count, last_bottom_pixels_count),
+]
+titles = ["Top Slices", "Middle Slices", "Bottom Slices"]
+
+# Configuração do layout para 3 gráficos
+fig, axes = plt.subplots(1, 3, figsize=(10, 18))
+bars_list = []
+for ax, title in zip(axes, titles):
+    bars = ax.bar(x, [0] * 10, color='skyblue')
+    ax.set_title(title)
+    ax.set_xlabel("Intensity classes (0-9)")
+    ax.set_ylabel("Amount of pixels")
+    ax.set_xticks(x)
+    ax.set_ylim(0, max([max(d.values()) for d in [first_top_pixels_count, last_top_pixels_count]]) + 500)
+    bars_list.append(bars)
+
+# Função para atualizar os gráficos
+def update(frame):
+    for i, (bars, (data_first, data_last)) in enumerate(zip(bars_list, data_pairs)):
+        data = data_first if frame % 2 == 0 else data_last
+        for bar, height in zip(bars, data.values()):
+            bar.set_height(height)
+        axes[i].set_title(f"{titles[i]} - {'First' if frame % 2 == 0 else 'Last'}")
+
+# Animação
+ani = FuncAnimation(fig, update, frames=6, interval=1000, repeat=True)
+plt.tight_layout()
+plt.show()
